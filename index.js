@@ -10,6 +10,7 @@ const gameServer = new colyseus.Server({
 // Register the room handler
 gameServer.define('my_room', MyRoom);
 
-// Listen on the specified port
-gameServer.listen(port);
-console.log(`Game server is listening on ws://localhost:${port}`);
+// Listen on the specified port and all network interfaces
+gameServer.listen(port, '0.0.0.0', () => {
+  console.log(`Game server is listening on ws://0.0.0.0:${port}`);
+});
