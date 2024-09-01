@@ -178,11 +178,20 @@ class MyRoom extends Room {
   }
 
 
+
+  
   endTurn() {
+    // Ensure there are still players in the turn order
+    if (this.turnOrder.length === 0) {
+      console.log("No players left to assign turn to.");
+      return;
+    }
+  
+    // Move to the next turn safely
     this.state.turn = (this.state.turn + 1) % this.turnOrder.length;
     this.assignTurn();
   }
-
+  
   checkGameEnd() {
     for (const [playerId, player] of this.state.players.entries()) {
       if (player.cards.every(card => card.isDisabled)) {
@@ -217,8 +226,9 @@ class MyRoom extends Room {
     console.log(`Player leaving: ${client.sessionId}`);
     if (this.state.players.has(client.sessionId)) {
       this.state.players.delete(client.sessionId);
+      this.turnOrder = this.turnOrder.filter(id => id !== client.sessionId); // Update turn order
       console.log(`Player left: ${client.sessionId}. Total players: ${this.state.players.size}`);
-      
+  
       if (this.state.gameStarted && this.state.players.size < 2) {
         this.endGame("Player disconnected");
       }
@@ -227,6 +237,7 @@ class MyRoom extends Room {
     }
     console.log(`Remaining players: ${JSON.stringify(Array.from(this.state.players.keys()))}`);
   }
+  
 
 }
 
