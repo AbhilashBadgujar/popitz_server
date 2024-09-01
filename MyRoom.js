@@ -28,7 +28,7 @@ class MyRoom extends Room {
       // Initialize cards for the new player
       for (let i = 0; i < 3; i++) {
         const card = new Card();
-        card.health = 20;
+        card.health = 100;
         card.isDisabled = false;
         newPlayer.cards[i] = card;
       }

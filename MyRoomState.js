@@ -4,7 +4,7 @@ const { Schema, MapSchema, ArraySchema, type } = schema;
 class Card extends Schema {
   constructor() {
     super();
-    this.health = 20;
+    this.health = 100;
     this.isDisabled = false;
   }
 }
