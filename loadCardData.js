@@ -11,15 +11,15 @@ function loadCardData() {
             skip_empty_lines: true
         });
         
-        // Convert numeric strings to numbers
         return records.map(record => ({
             id: parseInt(record.id),
             name: record.name,
             type: record.type,
             power: parseInt(record.power),
-            emo: parseInt(record.emo),
-            rarity: parseInt(record.rarity),
-            defense: parseInt(record.defense)
+            emo: record.emo,
+            rarity: record.rarity,
+            defense: parseInt(record.defense),
+            mojo: parseInt(record.mojo)
         }));
     } catch (error) {
         console.error('Error loading card data:', error);

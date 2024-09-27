@@ -1,13 +1,13 @@
-id,name,type,power,emo,rarity,defense
-1,City Guardian,city,80,50,3,70
-2,Urban Ninja,city,70,60,2,50
-3,Skyscraper Golem,city,90,30,4,80
-4,Forest Druid,forest,60,80,3,60
-5,Woodland Archer,forest,75,55,2,45
-6,Ancient Treant,forest,85,40,4,75
-7,Water Elemental,water,70,70,3,65
-8,Coral Mermaid,water,65,75,2,55
-9,Kraken Lord,water,95,35,5,85
-10,Techno Wizard,city,75,65,3,55
-11,Nature's Fury,forest,80,60,3,70
-12,Deep Sea Terror,water,85,55,4,75
+id,name,type,power,emo,rarity,defense,mojo
+1,City Guardian,city,80,Happiness,Rare,70,7
+2,Urban Ninja,city,70,Surprise,Common,50,5
+3,Skyscraper Golem,city,90,Anger,Legendary,80,9
+4,Forest Druid,forest,60,Love,Rare,60,8
+5,Woodland Archer,forest,75,Curiosity,Common,45,6
+6,Ancient Treant,forest,85,Sadness,Legendary,75,10
+7,Water Elemental,water,70,Fear,Rare,65,7
+8,Coral Mermaid,water,65,Disgust,Common,55,4
+9,Kraken Lord,water,95,Anger,Legendary,85,9
+10,Techno Wizard,city,75,Surprise,Rare,55,6
+11,Nature's Fury,forest,80,Fear,Rare,70,8
+12,Deep Sea Terror,water,85,Disgust,Legendary,75,10

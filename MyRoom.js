@@ -5,6 +5,22 @@ const { getTypeMultiplier, getWorldTypeMultiplier } = require("./typeChart");
 
 const WORLD_TYPES = ["city", "forest", "water"];
 const CARD_DATA = loadCardData();
+
+const EMO_BONUS = {
+  Happiness: 1.2,
+  Sadness: 0.9,
+  Anger: 1.3,
+  Fear: 0.8,
+  Surprise: 1.1,
+  Disgust: 1.0,
+  Love: 1.2,
+  Curiosity: 1.1
+};
+const RARITY_BONUS = {
+  Common: 1,
+  Rare: 1.2,
+  Legendary: 1.5
+};
 class MyRoom extends Room {
   onCreate(options) {
     console.log("Room created!");
@@ -140,12 +156,19 @@ class MyRoom extends Room {
         console.log(`Attack blocked on defended character ${toCharacterIndex}`);
         this.broadcast("attackBlocked", { attackerId: client.sessionId, defenderId: defenderId, characterIndex: toCharacterIndex });
       } else {
-        // Calculate damage based on power, type advantages, and world type
+        // Calculate damage based on power, type advantages, world type, emo, rarity, and mojo
         const baseDamage = attackingCharacter.power;
         const typeMultiplier = getTypeMultiplier(attackingCharacter.type, targetCharacter.type);
         const worldTypeMultiplier = getWorldTypeMultiplier(attackingCharacter.type, this.state.worldType);
+        const emoBonus = EMO_BONUS[attackingCharacter.emo];
+        const rarityBonus = RARITY_BONUS[attackingCharacter.rarity];
+        const mojoChance = Math.random() < (attackingCharacter.mojo / 10);
         
-        let damage = baseDamage * typeMultiplier * worldTypeMultiplier;
+        let damage = baseDamage * typeMultiplier * worldTypeMultiplier * emoBonus * rarityBonus;
+        if (mojoChance) {
+          damage *= 2;
+          console.log("Mojo activated! Double damage!");
+        }
         
         // Apply defense reduction
         const defenseReduction = targetCharacter.defense / 100; // Convert defense to a percentage
@@ -169,7 +192,10 @@ class MyRoom extends Room {
           toCharacterIndex: toCharacterIndex,
           damage: damage,
           typeMultiplier: typeMultiplier,
-          worldTypeMultiplier: worldTypeMultiplier
+          worldTypeMultiplier: worldTypeMultiplier,
+          emoBonus: emoBonus,
+          rarityBonus: rarityBonus,
+          mojoActivated: mojoChance
         });
       }
     } else {
