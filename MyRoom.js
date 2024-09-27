@@ -3,7 +3,7 @@ const { MyRoomState, Player, Character } = require("./MyRoomState");
 const loadCardData = require("./loadCardData");
 
 const WORLD_TYPES = ["city", "forest", "water"];
-
+const CARD_DATA = loadCardData();
 class MyRoom extends Room {
   onCreate(options) {
     console.log("Room created!");
