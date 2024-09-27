@@ -1,5 +1,7 @@
 const { Room } = require("colyseus");
-const { MyRoomState, Player, Card } = require("./MyRoomState");
+const { MyRoomState, Player, Character } = require("./MyRoomState");
+
+const WORLD_TYPES = ["city", "forest", "water"];
 
 class MyRoom extends Room {
   onCreate(options) {
@@ -7,7 +9,11 @@ class MyRoom extends Room {
     this.setState(new MyRoomState());
     this.maxClients = 2;
     this.countdown = 3;
-    this.turnOrder = []; // To keep track of player turn order
+    this.turnOrder = [];
+
+    // Set a random world type
+    this.state.worldType = WORLD_TYPES[Math.floor(Math.random() * WORLD_TYPES.length)];
+    console.log(`World type set to: ${this.state.worldType}`);
 
     this.onMessage("attack", (client, message) => {
       this.handleAttack(client, message);
@@ -19,24 +25,27 @@ class MyRoom extends Room {
   }
 
   onJoin(client, options) {
-    console.log(`Attempt to join: ${client.sessionId}`);
-    console.log(`Current players: ${JSON.stringify(Array.from(this.state.players.keys()))}`);
+    console.log(`Player joining: ${client.sessionId}`);
     
     if (!this.state.players.has(client.sessionId)) {
       const newPlayer = new Player();
+      newPlayer.sessionId = client.sessionId;
       
-      // Initialize cards for the new player
+      // Create 3 random characters for the player
       for (let i = 0; i < 3; i++) {
-        const card = new Card();
-        card.health = 100;
-        card.isDisabled = false;
-        newPlayer.cards[i] = card;
+        const character = new Character(
+          Math.floor(Math.random() * 100),  // power
+          Math.floor(Math.random() * 100),  // emo
+          Math.floor(Math.random() * 5) + 1,  // rarity
+          Math.floor(Math.random() * 100),  // defense
+          WORLD_TYPES[Math.floor(Math.random() * WORLD_TYPES.length)]  // random type
+        );
+        newPlayer.characters.push(character);
       }
   
       this.state.players.set(client.sessionId, newPlayer);
   
       console.log(`Player joined: ${client.sessionId}`);
-      console.log(`Updated players: ${JSON.stringify(Array.from(this.state.players.keys()))}`);
       console.log(`Total players: ${this.state.players.size}`);
   
       if (this.state.players.size === 2) {
@@ -47,28 +56,12 @@ class MyRoom extends Room {
     }
   }
 
-
-  onLeave(client, consented) {
-    console.log(`Player leaving: ${client.sessionId}`);
-    if (this.state.players.has(client.sessionId)) {
-      this.state.players.delete(client.sessionId);
-      console.log(`Player left: ${client.sessionId}. Total players: ${this.state.players.size}`);
-      
-      if (this.state.gameStarted && this.state.players.size < 2) {
-        this.endGame();
-      }
-    } else {
-      console.log(`Attempted to remove non-existent player: ${client.sessionId}`);
-    }
-    console.log(`Remaining players: ${JSON.stringify(Array.from(this.state.players.keys()))}`);
-  }
-
   startGame() {
     console.log("Starting the game!");
     this.state.gameStarted = true;
 
-    this.broadcast("start", { countdown: this.countdown });
-    console.log("Broadcasting start message with countdown 3");
+    this.broadcast("start", { countdown: this.countdown, worldType: this.state.worldType });
+    console.log(`Broadcasting start message with countdown ${this.countdown} and world type ${this.state.worldType}`);
 
     const countdownInterval = setInterval(() => {
       if (this.countdown > 0) {
@@ -82,6 +75,7 @@ class MyRoom extends Room {
       }
     }, 1000);
   }
+
   startFirstTurn() {
     this.turnOrder = Array.from(this.state.players.keys());
     this.state.turn = Math.floor(Math.random() * this.turnOrder.length);
@@ -93,21 +87,18 @@ class MyRoom extends Room {
     this.broadcast("turn", { playerSessionId: currentPlayerSessionId });
     console.log(`Turn assigned to player: ${currentPlayerSessionId}`);
 
-    // Check if defense has expired for the current player
     const currentPlayer = this.state.players.get(currentPlayerSessionId);
-    if (currentPlayer.defendedCardIndex !== -1) {
-      const expiredCardIndex = currentPlayer.defendedCardIndex;
-      currentPlayer.defendedCardIndex = -1;
-      this.broadcast("defenseExpired", { playerId: currentPlayerSessionId, cardIndex: expiredCardIndex });
-      console.log(`Defense expired for player ${currentPlayerSessionId}, card ${expiredCardIndex}`);
+    if (currentPlayer.defendedCharacterIndex !== -1) {
+      const expiredCharacterIndex = currentPlayer.defendedCharacterIndex;
+      currentPlayer.defendedCharacterIndex = -1;
+      this.broadcast("defenseExpired", { playerId: currentPlayerSessionId, characterIndex: expiredCharacterIndex });
+      console.log(`Defense expired for player ${currentPlayerSessionId}, character ${expiredCharacterIndex}`);
     }
 
-    // Clear any existing turn timeout
     if (this.turnTimeout) {
       clearTimeout(this.turnTimeout);
     }
 
-    // Set a new turn timeout (e.g., 30 seconds)
     this.turnTimeout = setTimeout(() => {
       console.log(`Turn timeout for player: ${currentPlayerSessionId}`);
       this.endTurn();
@@ -118,37 +109,43 @@ class MyRoom extends Room {
     const currentPlayerSessionId = this.turnOrder[this.state.turn];
     if (client.sessionId !== currentPlayerSessionId) return;
 
-    const { fromCardIndex, toCardIndex } = message;
+    const { fromCharacterIndex, toCharacterIndex } = message;
     const attacker = this.state.players.get(client.sessionId);
     const defenderId = this.turnOrder.find(id => id !== client.sessionId);
     const defender = this.state.players.get(defenderId);
 
-    if (fromCardIndex >= 0 && fromCardIndex < attacker.cards.length &&
-        toCardIndex >= 0 && toCardIndex < defender.cards.length) {
+    if (fromCharacterIndex >= 0 && fromCharacterIndex < attacker.characters.length &&
+        toCharacterIndex >= 0 && toCharacterIndex < defender.characters.length) {
       
-      const attackingCard = attacker.cards[fromCardIndex];
-      const targetCard = defender.cards[toCardIndex];
+      const attackingCharacter = attacker.characters[fromCharacterIndex];
+      const targetCharacter = defender.characters[toCharacterIndex];
 
-      if (attackingCard.isDisabled || targetCard.isDisabled) {
-        console.log("Cannot attack with or target a disabled card");
+      if (attackingCharacter.isDisabled || targetCharacter.isDisabled) {
+        console.log("Cannot attack with or target a disabled character");
         return;
       }
 
-      if (defender.defendedCardIndex === toCardIndex) {
-        console.log(`Attack blocked on defended card ${toCardIndex}`);
-        this.broadcast("attackBlocked", { attackerId: client.sessionId, defenderId: defenderId, cardIndex: toCardIndex });
+      if (defender.defendedCharacterIndex === toCharacterIndex) {
+        console.log(`Attack blocked on defended character ${toCharacterIndex}`);
+        this.broadcast("attackBlocked", { attackerId: client.sessionId, defenderId: defenderId, characterIndex: toCharacterIndex });
       } else {
-        // Perform the attack
-        targetCard.health = Math.max(0, targetCard.health - 20);
-        if (targetCard.health === 0) {
-          targetCard.isDisabled = true;
-          this.broadcast("cardDisabled", { playerId: defenderId, cardIndex: toCardIndex });
+        // Calculate damage based on power, character type, and world type
+        let damage = attackingCharacter.power;
+        if (attackingCharacter.type === this.state.worldType) {
+          damage *= 1.5;  // 50% more effective if character type matches world type
         }
-        console.log(`Player ${client.sessionId} attacked card ${toCardIndex} of player ${defenderId}`);
-        this.broadcast("updateHealth", { playerId: defenderId, cardIndex: toCardIndex, health: targetCard.health });
+        damage = Math.floor(damage);
+
+        targetCharacter.health = Math.max(0, targetCharacter.health - damage);
+        if (targetCharacter.health === 0) {
+          targetCharacter.isDisabled = true;
+          this.broadcast("characterDisabled", { playerId: defenderId, characterIndex: toCharacterIndex });
+        }
+        console.log(`Player ${client.sessionId} attacked character ${toCharacterIndex} of player ${defenderId} for ${damage} damage`);
+        this.broadcast("updateHealth", { playerId: defenderId, characterIndex: toCharacterIndex, health: targetCharacter.health });
       }
     } else {
-      console.error(`Invalid attack: fromCardIndex=${fromCardIndex}, toCardIndex=${toCardIndex}`);
+      console.error(`Invalid attack: fromCharacterIndex=${fromCharacterIndex}, toCharacterIndex=${toCharacterIndex}`);
     }
 
     this.checkGameEnd();
@@ -159,42 +156,37 @@ class MyRoom extends Room {
     const currentPlayerSessionId = this.turnOrder[this.state.turn];
     if (client.sessionId !== currentPlayerSessionId) return;
 
-    const { cardIndex } = message;
+    const { characterIndex } = message;
     const defender = this.state.players.get(client.sessionId);
 
-    if (cardIndex >= 0 && cardIndex < defender.cards.length) {
-      if (defender.cards[cardIndex].isDisabled) {
-        console.log("Cannot defend with a disabled card");
+    if (characterIndex >= 0 && characterIndex < defender.characters.length) {
+      if (defender.characters[characterIndex].isDisabled) {
+        console.log("Cannot defend with a disabled character");
         return;
       }
-      defender.defendedCardIndex = cardIndex;
-      console.log(`Player ${client.sessionId} is defending card ${cardIndex}`);
-      this.broadcast("cardDefended", { playerId: client.sessionId, cardIndex: cardIndex });
+      defender.defendedCharacterIndex = characterIndex;
+      console.log(`Player ${client.sessionId} is defending character ${characterIndex}`);
+      this.broadcast("characterDefended", { playerId: client.sessionId, characterIndex: characterIndex });
     } else {
-      console.error(`Invalid defend: cardIndex=${cardIndex}`);
+      console.error(`Invalid defend: characterIndex=${characterIndex}`);
     }
 
     this.endTurn();
   }
 
-
-
-  
   endTurn() {
-    // Ensure there are still players in the turn order
     if (this.turnOrder.length === 0) {
       console.log("No players left to assign turn to.");
       return;
     }
   
-    // Move to the next turn safely
     this.state.turn = (this.state.turn + 1) % this.turnOrder.length;
     this.assignTurn();
   }
   
   checkGameEnd() {
     for (const [playerId, player] of this.state.players.entries()) {
-      if (player.cards.every(card => card.isDisabled)) {
+      if (player.characters.every(character => character.isDisabled)) {
         const winnerId = Array.from(this.state.players.keys()).find(id => id !== playerId);
         this.state.winner = winnerId;
         this.broadcast("gameEnd", { winner: winnerId });
@@ -203,30 +195,11 @@ class MyRoom extends Room {
     }
   }
 
-  endGame(reason = "Game ended") {
-    console.log(`Game ended: ${reason}`);
-    this.state.gameStarted = false;
-    this.state.winner = reason === "Player disconnected" ? null : this.state.winner;
-
-    // Broadcast the game end message to all clients
-    this.broadcast("gameEnd", { reason: reason, winner: this.state.winner });
-
-    // Disconnect all clients
-    this.clients.forEach(client => {
-      client.leave();
-    });
-
-    // Close the room after a short delay to ensure all messages are sent
-    setTimeout(() => {
-      this.disconnect();
-    }, 1000);
-  }
-
   onLeave(client, consented) {
     console.log(`Player leaving: ${client.sessionId}`);
     if (this.state.players.has(client.sessionId)) {
       this.state.players.delete(client.sessionId);
-      this.turnOrder = this.turnOrder.filter(id => id !== client.sessionId); // Update turn order
+      this.turnOrder = this.turnOrder.filter(id => id !== client.sessionId);
       console.log(`Player left: ${client.sessionId}. Total players: ${this.state.players.size}`);
   
       if (this.state.gameStarted && this.state.players.size < 2) {
@@ -237,8 +210,22 @@ class MyRoom extends Room {
     }
     console.log(`Remaining players: ${JSON.stringify(Array.from(this.state.players.keys()))}`);
   }
-  
 
+  endGame(reason = "Game ended") {
+    console.log(`Game ended: ${reason}`);
+    this.state.gameStarted = false;
+    this.state.winner = reason === "Player disconnected" ? null : this.state.winner;
+
+    this.broadcast("gameEnd", { reason: reason, winner: this.state.winner });
+
+    this.clients.forEach(client => {
+      client.leave();
+    });
+
+    setTimeout(() => {
+      this.disconnect();
+    }, 1000);
+  }
 }
 
 module.exports = { MyRoom };

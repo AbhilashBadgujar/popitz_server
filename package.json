@@ -4,6 +4,10 @@
   "main": "index.js",
   "scripts": {
     "start": "node ./index.js",
+    "start:server": "node ./index.js",
+    "start:client1": "node ./client1.js",
+    "start:client2": "node ./client2.js",
+    "start:all": "node start-all.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "engines": {
@@ -15,7 +19,7 @@
   "description": "",
   "dependencies": {
     "@colyseus/schema": "^2.0.35",
-    "colyseus": "^0.15.17"
-    
+    "colyseus": "^0.15.17",
+    "colyseus.js": "^0.15.17"
   }
 }

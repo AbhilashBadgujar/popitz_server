@@ -1,9 +1,14 @@
 const schema = require('@colyseus/schema');
 const { Schema, MapSchema, ArraySchema, type } = schema;
 
-class Card extends Schema {
-  constructor() {
+class Character extends Schema {
+  constructor(power, emo, rarity, defense, type) {
     super();
+    this.power = power;
+    this.emo = emo;
+    this.rarity = rarity;
+    this.defense = defense;
+    this.type = type;
     this.health = 100;
     this.isDisabled = false;
   }
@@ -12,8 +17,8 @@ class Card extends Schema {
 class Player extends Schema {
   constructor() {
     super();
-    this.cards = new ArraySchema(new Card(), new Card(), new Card());
-    this.defendedCardIndex = -1;
+    this.characters = new ArraySchema();
+    this.defendedCharacterIndex = -1;
     this.sessionId = "";
   }
 }
@@ -26,17 +31,23 @@ class MyRoomState extends Schema {
     this.countdown = 3;
     this.gameStarted = false;
     this.winner = "";
+    this.worldType = "";
   }
 }
 
-schema.defineTypes(Card, {
-  health: "uint16",
+schema.defineTypes(Character, {
+  power: "number",
+  emo: "number",
+  rarity: "number",
+  defense: "number",
+  type: "string",
+  health: "number",
   isDisabled: "boolean"
 });
 
 schema.defineTypes(Player, {
-  cards: [Card],
-  defendedCardIndex: "int8",
+  characters: [Character],
+  defendedCharacterIndex: "int8",
   sessionId: "string"
 });
 
@@ -45,7 +56,8 @@ schema.defineTypes(MyRoomState, {
   turn: "uint8",
   countdown: "uint8",
   gameStarted: "boolean",
-  winner: "string"
+  winner: "string",
+  worldType: "string"
 });
 
-module.exports = { MyRoomState, Player, Card };
+module.exports = { MyRoomState, Player, Character };
