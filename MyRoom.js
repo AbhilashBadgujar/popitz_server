@@ -1,5 +1,6 @@
 const { Room } = require("colyseus");
 const { MyRoomState, Player, Character } = require("./MyRoomState");
+const loadCardData = require("./loadCardData");
 
 const WORLD_TYPES = ["city", "forest", "water"];
 
