@@ -1,6 +1,7 @@
 const { Room } = require("colyseus");
 const { MyRoomState, Player, Character } = require("./MyRoomState");
 const loadCardData = require("./loadCardData");
+const { getTypeMultiplier, getWorldTypeMultiplier } = require("./typeChart");
 
 const WORLD_TYPES = ["city", "forest", "water"];
 const CARD_DATA = loadCardData();
