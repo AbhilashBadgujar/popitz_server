@@ -10,6 +10,15 @@ class MyRoom extends Room {
     this.maxClients = 2;
     this.countdown = 3;
     this.turnOrder = [];
+    this.cardData = [];
+
+    // Load card data from CSV
+    fs.createReadStream('cards.csv')
+      .pipe(csv())
+      .on('data', (data) => this.cardData.push(data))
+      .on('end', () => {
+        console.log('Card data loaded successfully');
+      });
 
     // Set a random world type
     this.state.worldType = WORLD_TYPES[Math.floor(Math.random() * WORLD_TYPES.length)];
@@ -33,12 +42,15 @@ class MyRoom extends Room {
       
       // Create 3 random characters for the player
       for (let i = 0; i < 3; i++) {
+        const randomCardId = Math.floor(Math.random() * this.cardData.length) + 1;
+        const cardInfo = this.cardData.find(card => card.id === randomCardId.toString());
         const character = new Character(
-          Math.floor(Math.random() * 100),  // power
-          Math.floor(Math.random() * 100),  // emo
-          Math.floor(Math.random() * 5) + 1,  // rarity
-          Math.floor(Math.random() * 100),  // defense
-          WORLD_TYPES[Math.floor(Math.random() * WORLD_TYPES.length)]  // random type
+          randomCardId,
+          cardInfo.power,
+          cardInfo.emo,
+          cardInfo.rarity,
+          cardInfo.defense,
+          cardInfo.type
         );
         newPlayer.characters.push(character);
       }
