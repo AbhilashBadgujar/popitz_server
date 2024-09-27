@@ -11,6 +11,12 @@ class MyRoom extends Room {
     this.maxClients = 2;
     this.countdown = 3;
     this.turnOrder = [];
+    this.cardData = loadCardData();
+
+    if (this.cardData.length === 0) {
+      console.error("Failed to load card data. Room creation aborted.");
+      return;
+    }
 
     // Set a random world type
     this.state.worldType = WORLD_TYPES[Math.floor(Math.random() * WORLD_TYPES.length)];
@@ -24,6 +30,7 @@ class MyRoom extends Room {
       this.handleDefend(client, message);
     });
   }
+
 
   onJoin(client, options) {
     console.log(`Player joining: ${client.sessionId}`);
@@ -132,11 +139,17 @@ class MyRoom extends Room {
         console.log(`Attack blocked on defended character ${toCharacterIndex}`);
         this.broadcast("attackBlocked", { attackerId: client.sessionId, defenderId: defenderId, characterIndex: toCharacterIndex });
       } else {
-        // Calculate damage based on power, character type, and world type
-        let damage = attackingCharacter.power;
-        if (attackingCharacter.type === this.state.worldType) {
-          damage *= 1.5;  // 50% more effective if character type matches world type
-        }
+        // Calculate damage based on power, type advantages, and world type
+        const baseDamage = attackingCharacter.power;
+        const typeMultiplier = getTypeMultiplier(attackingCharacter.type, targetCharacter.type);
+        const worldTypeMultiplier = getWorldTypeMultiplier(attackingCharacter.type, this.state.worldType);
+        
+        let damage = baseDamage * typeMultiplier * worldTypeMultiplier;
+        
+        // Apply defense reduction
+        const defenseReduction = targetCharacter.defense / 100; // Convert defense to a percentage
+        damage *= (1 - defenseReduction);
+        
         damage = Math.floor(damage);
 
         targetCharacter.health = Math.max(0, targetCharacter.health - damage);
@@ -146,6 +159,17 @@ class MyRoom extends Room {
         }
         console.log(`Player ${client.sessionId} attacked character ${toCharacterIndex} of player ${defenderId} for ${damage} damage`);
         this.broadcast("updateHealth", { playerId: defenderId, characterIndex: toCharacterIndex, health: targetCharacter.health });
+        
+        // Broadcast attack details
+        this.broadcast("attackDetails", {
+          attackerId: client.sessionId,
+          defenderId: defenderId,
+          fromCharacterIndex: fromCharacterIndex,
+          toCharacterIndex: toCharacterIndex,
+          damage: damage,
+          typeMultiplier: typeMultiplier,
+          worldTypeMultiplier: worldTypeMultiplier
+        });
       }
     } else {
       console.error(`Invalid attack: fromCharacterIndex=${fromCharacterIndex}, toCharacterIndex=${toCharacterIndex}`);

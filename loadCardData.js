@@ -1,9 +1,11 @@
 const fs = require('fs');
+const path = require('path');
 const { parse } = require('csv-parse/sync');
 
 function loadCardData() {
     try {
-        const fileContent = fs.readFileSync('cards.csv', 'utf-8');
+        const filePath = path.join(__dirname, 'cards.csv');
+        const fileContent = fs.readFileSync(filePath, 'utf-8');
         const records = parse(fileContent, {
             columns: true,
             skip_empty_lines: true
