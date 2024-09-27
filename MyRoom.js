@@ -35,9 +35,9 @@ class MyRoom extends Room {
       return;
     }
 
-    // Set a random world type
-    this.state.worldType = WORLD_TYPES[Math.floor(Math.random() * WORLD_TYPES.length)];
-    console.log(`World type set to: ${this.state.worldType}`);
+    this.onMessage("selectCards", (client, message) => {
+      this.handleCardSelection(client, message);
+    });
 
     this.onMessage("attack", (client, message) => {
       this.handleAttack(client, message);
@@ -55,38 +55,58 @@ class MyRoom extends Room {
     if (!this.state.players.has(client.sessionId)) {
       const newPlayer = new Player();
       newPlayer.sessionId = client.sessionId;
-      
-      // Create 3 random characters for the player
-      for (let i = 0; i < 3; i++) {
-        const randomCardData = this.cardData[Math.floor(Math.random() * this.cardData.length)];
-        const character = new Character(
-          randomCardData.id,
-          randomCardData.power,
-          randomCardData.emo,
-          randomCardData.rarity,
-          randomCardData.defense,
-          randomCardData.type,
-          randomCardData.mojo
-        );
-        newPlayer.characters.push(character);
-      }
-  
       this.state.players.set(client.sessionId, newPlayer);
-  
+
       console.log(`Player joined: ${client.sessionId}`);
       console.log(`Total players: ${this.state.players.size}`);
-  
+
+      // Send all cards to the client for selection
+      client.send("allCards", this.cardData);
+
       if (this.state.players.size === 2) {
-        this.startGame();
+        // Wait for both players to select cards before starting the game
       }
     } else {
       console.log(`Player ${client.sessionId} already exists in the room.`);
     }
   }
 
+  handleCardSelection(client, message) {
+    const player = this.state.players.get(client.sessionId);
+    if (player && message.cardIds && message.cardIds.length === 3) {
+      message.cardIds.forEach(cardId => {
+        const cardData = this.cardData.find(card => card.id === cardId);
+        if (cardData) {
+          const character = new Character(
+            cardData.id,
+            cardData.power,
+            cardData.emo,
+            cardData.rarity,
+            cardData.defense,
+            cardData.type,
+            cardData.mojo
+          );
+          player.characters.push(character);
+        }
+      });
+
+      if (this.allPlayersReady()) {
+        this.startGame();
+      }
+    }
+  }
+
+  allPlayersReady() {
+    return Array.from(this.state.players.values()).every(player => player.characters.length === 3);
+  }
+
   startGame() {
     console.log("Starting the game!");
     this.state.gameStarted = true;
+
+    // Set a random world type
+    this.state.worldType = WORLD_TYPES[Math.floor(Math.random() * WORLD_TYPES.length)];
+    console.log(`World type set to: ${this.state.worldType}`);
 
     this.broadcast("start", { countdown: this.countdown, worldType: this.state.worldType });
     console.log(`Broadcasting start message with countdown ${this.countdown} and world type ${this.state.worldType}`);
