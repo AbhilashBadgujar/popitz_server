@@ -150,7 +150,19 @@ class MyRoom extends Room {
     this.turnTimeout = setTimeout(() => {
       console.log(`Turn timeout for player: ${currentPlayerSessionId}`);
       this.endTurn();
-    }, 30000);
+    }, 100000);
+  }
+
+  checkEmptyRoom() {
+    if (this.state.players.size === 0) {
+      console.log(`Room ${this.roomId} is empty. Disposing in 60 seconds if it remains empty.`);
+      this.clock.setTimeout(() => {
+        if (this.state.players.size === 0) {
+          console.log(`Disposing empty room ${this.roomId}`);
+          this.disconnect();
+        }
+      }, 60000); // 60 seconds
+    }
   }
 
   handleAttack(client, message) {
@@ -224,7 +236,9 @@ class MyRoom extends Room {
     }
 
     this.checkGameEnd();
-    this.endTurn();
+    if (!this.state.winner) {
+      this.endTurn();
+    }
   }
 
   handleDefend(client, message) {
@@ -245,8 +259,11 @@ class MyRoom extends Room {
     } else {
       console.error(`Invalid defend: characterIndex=${characterIndex}`);
     }
+    this.checkGameEnd();
+    if (!this.state.winner) {
+      this.endTurn();
+    }
 
-    this.endTurn();
   }
 
   endTurn() {
@@ -260,13 +277,35 @@ class MyRoom extends Room {
   }
   
   checkGameEnd() {
+    let allPlayersLost = true;
+  
     for (const [playerId, player] of this.state.players.entries()) {
-      if (player.characters.every(character => character.isDisabled)) {
+      const allCharactersDead = player.characters.every(character => character.health <= 0);
+      
+      if (!allCharactersDead) {
+        allPlayersLost = false;
+      } else {
+        // This player has lost
         const winnerId = Array.from(this.state.players.keys()).find(id => id !== playerId);
         this.state.winner = winnerId;
         this.broadcast("gameEnd", { winner: winnerId });
-        return;
+        
+        // No need to continue checking if we've found a winner
+        break;
       }
+    }
+  
+    if (allPlayersLost) {
+      // If all players have lost, it's a draw
+      this.broadcast("gameEnd", { winner: null, result: "draw" });
+    }
+  
+    if (this.state.winner || allPlayersLost) {
+      // End the game and destroy the room
+      this.clock.setTimeout(() => {
+        console.log(`Game ended. Destroying room ${this.roomId}`);
+        this.disconnect();
+      }, 5000); // Give clients 5 seconds to receive the gameEnd message before destroying the room
     }
   }
 
@@ -300,6 +339,10 @@ class MyRoom extends Room {
     setTimeout(() => {
       this.disconnect();
     }, 1000);
+  }
+
+  onDispose() {
+    console.log(`Room ${this.roomId} disposing...`);
   }
 }
 

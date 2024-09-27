@@ -1,0 +1,129 @@
+body {
+    font-family: Arial, sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    margin: 0;
+    background-color: #f0f0f0;
+}
+#game-container {
+    background-color: white;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    max-width: 1200px;
+    width: 100%;
+}
+#card-selection {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-around;
+    margin-bottom: 20px;
+}
+.card {
+    border: 2px solid #ddd;
+    padding: 10px;
+    margin: 10px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    width: calc(25% - 24px);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    position: relative;
+    overflow: hidden;
+}
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+}
+.card.selected {
+    border-color: #4CAF50;
+    background-color: #e8f5e9;
+    box-shadow: 0 0 15px rgba(76, 175, 80, 0.5);
+}
+.card.selected::after {
+    content: '✓';
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    color: #4CAF50;
+    font-size: 24px;
+    font-weight: bold;
+}
+.card:not(.selected) {
+    opacity: 0.7;
+}
+#selection-info {
+    text-align: center;
+    margin-bottom: 20px;
+    font-size: 18px;
+    font-weight: bold;
+}
+#start-game-btn {
+    display: block;
+    margin: 20px auto;
+    padding: 10px 20px;
+    font-size: 18px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+#start-game-btn:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+}
+#start-game-btn:not(:disabled):hover {
+    background-color: #45a049;
+}
+#characters, #opponent-characters, #actions {
+    display: flex;
+    justify-content: space-around;
+    margin-bottom: 20px;
+}
+.character {
+    border: 1px solid #ddd;
+    padding: 10px;
+    border-radius: 5px;
+    text-align: center;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    width: 30%;
+}
+.character.selected {
+    background-color: #e0ffe0;
+}
+.character.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+#log {
+    height: 200px;
+    overflow-y: scroll;
+    border: 1px solid #ddd;
+    padding: 10px;
+    margin-top: 20px;
+}
+#opponent-info, #player-info {
+    margin-bottom: 20px;
+}
+h2 {
+    text-align: center;
+}
+.type-city { background-color: #A8A878; }
+.type-forest { background-color: #A8B820; }
+.type-water { background-color: #6890F0; }
+.emo-Happiness { color: #FFD700; }
+.emo-Sadness { color: #4169E1; }
+.emo-Anger { color: #FF4500; }
+.emo-Fear { color: #800080; }
+.emo-Surprise { color: #00CED1; }
+.emo-Disgust { color: #32CD32; }
+.emo-Love { color: #FF69B4; }
+.emo-Curiosity { color: #FF8C00; }
+.rarity-Common { font-weight: normal; }
+.rarity-Rare { font-weight: bold; color: #1E90FF; }
+.rarity-Legendary { font-weight: bold; color: #FFD700; }
