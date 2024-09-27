@@ -58,14 +58,15 @@ class MyRoom extends Room {
       
       // Create 3 random characters for the player
       for (let i = 0; i < 3; i++) {
-        const randomCardData = CARD_DATA[Math.floor(Math.random() * CARD_DATA.length)];
+        const randomCardData = this.cardData[Math.floor(Math.random() * this.cardData.length)];
         const character = new Character(
           randomCardData.id,
           randomCardData.power,
           randomCardData.emo,
           randomCardData.rarity,
           randomCardData.defense,
-          randomCardData.type
+          randomCardData.type,
+          randomCardData.mojo
         );
         newPlayer.characters.push(character);
       }

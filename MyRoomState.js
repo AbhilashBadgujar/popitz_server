@@ -2,7 +2,7 @@ const schema = require('@colyseus/schema');
 const { Schema, MapSchema, ArraySchema, type } = schema;
 
 class Character extends Schema {
-  constructor(id, power, emo, rarity, defense, type) {
+  constructor(id, power, emo, rarity, defense, type, mojo) {
     super();
     this.id = id;
     this.power = power;
@@ -10,6 +10,7 @@ class Character extends Schema {
     this.rarity = rarity;
     this.defense = defense;
     this.type = type;
+    this.mojo = mojo;
     this.health = 100;
     this.isDisabled = false;
   }
@@ -39,10 +40,11 @@ class MyRoomState extends Schema {
 schema.defineTypes(Character, {
   id: "number",
   power: "number",
-  emo: "number",
-  rarity: "number",
+  emo: "string",
+  rarity: "string",
   defense: "number",
   type: "string",
+  mojo: "number",
   health: "number",
   isDisabled: "boolean"
 });
