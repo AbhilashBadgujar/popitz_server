@@ -1,5 +1,4 @@
 const { Room } = require("colyseus");
-const { MyRoom } = require("./MyRoom");
 
 class MatchmakingRoom extends Room {
   onCreate(options) {
@@ -21,7 +20,7 @@ class MatchmakingRoom extends Room {
 
   async createGame(player1, player2) {
     try {
-      const gameRoom = await this.createRoom("game", MyRoom);
+      const gameRoom = await this.gameServer.createRoom("game", {});
       await player1.send("gameReady", { roomId: gameRoom.roomId });
       await player2.send("gameReady", { roomId: gameRoom.roomId });
       console.log(`Game room created: ${gameRoom.roomId}`);
@@ -29,11 +28,6 @@ class MatchmakingRoom extends Room {
       console.error("Error creating game room:", error);
       this.waitingPlayers.unshift(player1, player2);
     }
-  }
-
-  async createRoom(roomName, RoomClass) {
-    const room = await this.gameServer.define(roomName, RoomClass).create();
-    return room;
   }
 
   onLeave(client) {
