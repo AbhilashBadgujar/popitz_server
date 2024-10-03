@@ -3,7 +3,6 @@ const express = require("express");
 const http = require("http");
 const { WebSocketTransport } = require("@colyseus/ws-transport");
 const { MyRoom } = require("./MyRoom");
-const { MatchmakingRoom } = require("./MatchmakingRoom");
 
 const port = process.env.PORT || 2567;
 const app = express();
@@ -22,8 +21,14 @@ const gameServer = new colyseus.Server({
   })
 });
 
-gameServer.define('matchmaking', MatchmakingRoom, { gameServer });
-gameServer.define('game', MyRoom);  // Define the game room type
+// Define your room
+gameServer.define("game_room", MyRoom)
+  .enableRealtimeListing();
+
+// Set up matchmaker
+gameServer.define("game", MyRoom)
+  .enableRealtimeListing()
+  .setSimultaneousReservedSeatCount(2);
 
 console.log("Starting server...");
 server.listen(port, '0.0.0.0', () => {

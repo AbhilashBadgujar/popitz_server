@@ -8,6 +8,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
     let isMyTurn = false;
     let allCards = [];
     let selectedCardIds = [];
+
     const startMatchmakingBtn = document.getElementById('start-matchmaking-btn');
     const matchmakingStatus = document.getElementById('matchmaking-status');
     const gameContent = document.getElementById('game-content');
@@ -19,17 +20,14 @@ document.addEventListener('DOMContentLoaded', (event) => {
         matchmakingStatus.textContent = "Searching for a match...";
 
         try {
-            const matchmakingRoom = await client.joinOrCreate("matchmaking");
-            console.log("Joined matchmaking room");
-
-            matchmakingRoom.onMessage("gameReady", async (message) => {
-                matchmakingStatus.textContent = "Match found! Joining game...";
-                await joinGameRoom(message.roomId);
-                matchmakingRoom.leave();
-            });
-
+            // Use the matchmaker to find a game
+            room = await client.joinOrCreate("game");
+            console.log("Joined game room", room);
+            setupRoomHandlers();
+            gameContent.style.display = 'block';
+            document.getElementById('matchmaking-container').style.display = 'none';
         } catch (e) {
-            console.error("Matchmaking error", e);
+            console.error("Error joining game room", e);
             matchmakingStatus.textContent = "Error finding a match. Please try again.";
             startMatchmakingBtn.disabled = false;
         }
