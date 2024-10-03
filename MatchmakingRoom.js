@@ -1,10 +1,10 @@
 const { Room } = require("colyseus");
-const { MyRoom } = require("./MyRoom");
 
 class MatchmakingRoom extends Room {
   onCreate(options) {
     this.maxClients = 50; // Adjust as needed
     this.waitingPlayers = [];
+    this.gameServer = options.gameServer;
   }
 
   onJoin(client) {

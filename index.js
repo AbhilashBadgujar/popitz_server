@@ -22,7 +22,7 @@ const gameServer = new colyseus.Server({
   })
 });
 
-gameServer.define('matchmaking', MatchmakingRoom);
+gameServer.define('matchmaking', MatchmakingRoom, { gameServer });
 gameServer.define('game', MyRoom);
 
 console.log("Starting server...");
