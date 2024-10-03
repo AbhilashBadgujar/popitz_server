@@ -23,7 +23,7 @@ const gameServer = new colyseus.Server({
 });
 
 gameServer.define('matchmaking', MatchmakingRoom, { gameServer });
-gameServer.define('game', MyRoom);
+// We no longer need to define 'game' here, as it's dynamically created in MatchmakingRoom
 
 console.log("Starting server...");
 server.listen(port, '0.0.0.0', () => {
