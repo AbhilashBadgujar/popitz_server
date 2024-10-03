@@ -8,7 +8,50 @@ document.addEventListener('DOMContentLoaded', (event) => {
     let isMyTurn = false;
     let allCards = [];
     let selectedCardIds = [];
+    const startMatchmakingBtn = document.getElementById('start-matchmaking-btn');
+    const matchmakingStatus = document.getElementById('matchmaking-status');
+    const gameContent = document.getElementById('game-content');
 
+    startMatchmakingBtn.addEventListener('click', startMatchmaking);
+
+    async function startMatchmaking() {
+        startMatchmakingBtn.disabled = true;
+        matchmakingStatus.textContent = "Searching for a match...";
+
+        try {
+            const matchmakingRoom = await client.joinOrCreate("matchmaking");
+            console.log("Joined matchmaking room");
+
+            matchmakingRoom.onMessage("gameReady", async (message) => {
+                matchmakingStatus.textContent = "Match found! Joining game...";
+                await joinGameRoom(message.roomId);
+                matchmakingRoom.leave();
+            });
+
+        } catch (e) {
+            console.error("Matchmaking error", e);
+            matchmakingStatus.textContent = "Error finding a match. Please try again.";
+            startMatchmakingBtn.disabled = false;
+        }
+    }
+    document.getElementById('start-game-btn').addEventListener('click', () => {
+        if (selectedCardIds.length === 3) {
+            room.send("selectCards", { cardIds: selectedCardIds });
+        }
+    });
+    async function joinGameRoom(roomId) {
+        try {
+            room = await client.joinById(roomId);
+            console.log("Joined game room", room);
+            setupRoomHandlers();
+            gameContent.style.display = 'block';
+            document.getElementById('matchmaking-container').style.display = 'none';
+        } catch (e) {
+            console.error("Error joining game room", e);
+            matchmakingStatus.textContent = "Error joining game. Please try again.";
+            startMatchmakingBtn.disabled = false;
+        }
+    }
     async function joinRoom() {
         try {
             room = await client.joinOrCreate("my_room");
@@ -20,11 +63,11 @@ document.addEventListener('DOMContentLoaded', (event) => {
     }
 
     function setupRoomHandlers() {
+
         room.onMessage("allCards", (cards) => {
             allCards = cards;
             displayCardSelection();
         });
-
         room.onMessage("start", (message) => {
             document.getElementById('card-selection').style.display = 'none';
             document.getElementById('start-game-btn').style.display = 'none';

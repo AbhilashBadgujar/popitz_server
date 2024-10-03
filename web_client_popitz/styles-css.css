@@ -19,7 +19,40 @@ body {
     display: flex;
     flex-wrap: wrap;
     justify-content: space-around;
-    margin-bottom: 20px;
+   
+    #matchmaking-container {
+        text-align: center;
+        margin-bottom: 20px;
+    }
+    
+    #start-matchmaking-btn {
+        font-size: 18px;
+        padding: 10px 20px;
+        background-color: #4CAF50;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: background-color 0.3s;
+    }
+    
+    #start-matchmaking-btn:hover {
+        background-color: #45a049;
+    }
+    
+    #start-matchmaking-btn:disabled {
+        background-color: #cccccc;
+        cursor: not-allowed;
+    }
+    
+    #matchmaking-status {
+        margin-top: 10px;
+        font-style: italic;
+    }
+    
+    #game-content {
+        display: none;
+    } margin-bottom: 20px;
 }
 .card {
     border: 2px solid #ddd;
