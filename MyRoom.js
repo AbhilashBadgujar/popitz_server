@@ -66,32 +66,45 @@ class MyRoom extends Room {
   }
 
   handleCardSelection(client, message) {
-    console.log(`Received card selection from ${client.sessionId}:`, message.cardIds);
-    const player = this.state.players.get(client.sessionId);
-    if (player && message.cardIds && message.cardIds.length === 3) {
-      message.cardIds.forEach(cardId => {
-        const cardData = this.cardData.find(card => card.id === cardId);
-        if (cardData) {
-          const character = new Character(
-            cardData.id,
-            cardData.power,
-            cardData.emo,
-            cardData.rarity,
-            cardData.defense,
-            cardData.type,
-            cardData.mojo
-          );
-          player.characters.push(character);
-        }
-      });
+      const player = this.state.players.get(client.sessionId);
 
-      player.ready = true;
-
-      if (this.allPlayersReady()) {
-        this.startGame();
+      // Check if the player has already selected cards
+      if (!player || player.ready) {
+          console.log(`Player ${client.sessionId} already selected cards. Ignoring duplicate selection.`);
+          return;
       }
-    }
+
+      // Process the card selection
+      console.log(`Received card selection from ${client.sessionId}:`, message.cardIds);
+      if (message.cardIds && message.cardIds.length === 3) {
+          message.cardIds.forEach(cardId => {
+              const cardData = this.cardData.find(card => card.id === cardId);
+              if (cardData) {
+                  const character = new Character(
+                      cardData.id,
+                      cardData.power,
+                      cardData.emo,
+                      cardData.rarity,
+                      cardData.defense,
+                      cardData.type,
+                      cardData.mojo
+                  );
+                  player.characters.push(character);
+              }
+          });
+
+          player.ready = true;
+          console.log(`Player ${client.sessionId} has completed their card selection.`);
+
+          // Start the game if both players are ready
+          if (this.allPlayersReady()) {
+              this.startGame();
+          }
+      } else {
+          console.log(`Invalid card selection from ${client.sessionId}`);
+      }
   }
+
 
   allPlayersReady() {
     return Array.from(this.state.players.values()).every(player => player.ready);

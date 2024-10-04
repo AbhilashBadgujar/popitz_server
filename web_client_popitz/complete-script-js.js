@@ -222,18 +222,24 @@ document.addEventListener('DOMContentLoaded', (event) => {
     }
 
     function updateCharacterDisplay() {
-        updatePlayerCharacters(myCharacters, 'characters', true);
-        updatePlayerCharacters(opponentCharacters, 'opponent-characters', false);
+        // Limit the display to 3 characters per player.
+        updatePlayerCharacters(myCharacters.slice(0, 3), 'characters', true);
+        updatePlayerCharacters(opponentCharacters.slice(0, 3), 'opponent-characters', false);
     }
 
     function updatePlayerCharacters(characters, elementId, isPlayer) {
         const charactersDiv = document.getElementById(elementId);
-        charactersDiv.innerHTML = '';
+        charactersDiv.innerHTML = ''; // Clear previous entries
+    
         characters.forEach((char, index) => {
             const charDiv = document.createElement('div');
             charDiv.className = `character type-${char.type} ${char.isDisabled ? 'disabled' : ''}`;
+            
+            // Add selected class based on index
             if (isPlayer && selectedCharacterIndex === index) charDiv.classList.add('selected');
             if (!isPlayer && selectedOpponentCharacterIndex === index) charDiv.classList.add('selected');
+            
+            // Character data display
             charDiv.innerHTML = `
                 <h3>Character ${index + 1}</h3>
                 <p>ID: ${char.id}</p>
@@ -246,11 +252,14 @@ document.addEventListener('DOMContentLoaded', (event) => {
                 <p>Health: ${char.health}</p>
                 <p>${char.isDisabled ? 'DISABLED' : 'ACTIVE'}</p>
             `;
+            
+            // Clickable actions based on the player or opponent
             if (isPlayer && isMyTurn && !char.isDisabled) {
                 charDiv.onclick = () => selectCharacter(index, isPlayer);
             } else if (!isPlayer && isMyTurn) {
                 charDiv.onclick = () => selectCharacter(index, isPlayer);
             }
+    
             charactersDiv.appendChild(charDiv);
         });
     }
@@ -272,10 +281,13 @@ document.addEventListener('DOMContentLoaded', (event) => {
     }
 
     document.getElementById('start-game-btn').addEventListener('click', () => {
-        if (selectedCardIds.length === 3) {
+        if (selectedCardIds.length === 3 && !room.state.selectionComplete) {
             room.send("selectCards", { cardIds: selectedCardIds });
+            document.getElementById('start-game-btn').disabled = true;  // Disable the button to prevent multiple sends
+            room.state.selectionComplete = true;  // Flag to indicate that the selection has been completed
         }
     });
+    
 
     document.getElementById('attack-btn').addEventListener('click', () => {
         if (!isMyTurn || selectedCharacterIndex === -1 || selectedOpponentCharacterIndex === -1) return;
