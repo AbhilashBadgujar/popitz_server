@@ -22,23 +22,27 @@ const gameServer = new colyseus.Server({
   })
 });
 
-// Define your room
-gameServer.define("game", MyRoom);
-
 // Initialize the Matchmaking Manager
 const matchmakingManager = new MatchmakingManager(gameServer);
 
-// Handle matchmaking requests
-gameServer.on('connection', (client) => {
-  client.onMessage('find_match', (options) => {
-    matchmakingManager.addToQueue(client, options);
-  });
+// Define your matchmaking room
+class MatchmakingRoom extends colyseus.Room {
+  onCreate(options) {
+    this.onMessage("find_match", (client, options) => {
+      console.log(`Client ${client.sessionId} requesting to find a match`);
+      matchmakingManager.addToQueue(client, options);
+    });
+  }
 
-  // Handle client disconnection
-  client.onLeave(() => {
+  onLeave(client) {
+    console.log(`Client ${client.sessionId} disconnected`);
     matchmakingManager.handleDisconnect(client);
-  });
-});
+  }
+}
+
+// Define your rooms
+gameServer.define("matchmaking", MatchmakingRoom);
+gameServer.define("game", MyRoom);
 
 console.log("Starting server...");
 server.listen(port, '0.0.0.0', () => {
