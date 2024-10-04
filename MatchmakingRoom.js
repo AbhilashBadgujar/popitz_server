@@ -1,39 +1,40 @@
-const { Room } = require("colyseus");
-
-class MatchmakingRoom extends Room {
-  onCreate(options) {
-    this.maxClients = 50; // Adjust as needed
-    this.waitingPlayers = [];
-    this.gameServer = options.gameServer;
+class MatchmakingManager {
+  constructor(gameServer) {
+    this.gameServer = gameServer;
+    this.queue = [];
   }
 
-  onJoin(client) {
-    this.waitingPlayers.push(client);
-    console.log(`Player ${client.sessionId} joined matchmaking. Waiting players: ${this.waitingPlayers.length}`);
+  addToQueue(client, options) {
+    this.queue.push({ client, options });
+    console.log(`Added client ${client.sessionId} to queue. Queue size: ${this.queue.length}`);
+    this.checkQueue();
+  }
 
-    if (this.waitingPlayers.length >= 2) {
-      const player1 = this.waitingPlayers.shift();
-      const player2 = this.waitingPlayers.shift();
-      this.createGame(player1, player2);
+  handleDisconnect(client) {
+    const index = this.queue.findIndex(item => item.client === client);
+    if (index !== -1) {
+      this.queue.splice(index, 1);
+      console.log(`Removed disconnected client ${client.sessionId} from queue. Queue size: ${this.queue.length}`);
     }
   }
 
-  async createGame(player1, player2) {
-    try {
-      const gameRoom = await this.gameServer.createRoom("game", {});
-      await player1.send("gameReady", { roomId: gameRoom.roomId });
-      await player2.send("gameReady", { roomId: gameRoom.roomId });
-      console.log(`Game room created: ${gameRoom.roomId}`);
-    } catch (error) {
-      console.error("Error creating game room:", error);
-      this.waitingPlayers.unshift(player1, player2);
+  async checkQueue() {
+    if (this.queue.length >= 2) {
+      const player1 = this.queue.shift();
+      const player2 = this.queue.shift();
+      
+      try {
+        const room = await this.gameServer.create("game", {});
+        await room.connectClientTo(player1.client, player1.options);
+        await room.connectClientTo(player2.client, player2.options);
+        console.log(`Created game room ${room.roomId} for clients ${player1.client.sessionId} and ${player2.client.sessionId}`);
+      } catch (error) {
+        console.error("Error creating game room:", error);
+        // Put players back in queue if room creation fails
+        this.queue.unshift(player2, player1);
+      }
     }
-  }
-
-  onLeave(client) {
-    this.waitingPlayers = this.waitingPlayers.filter(player => player !== client);
-    console.log(`Player ${client.sessionId} left matchmaking. Waiting players: ${this.waitingPlayers.length}`);
   }
 }
 
-module.exports = { MatchmakingRoom };
+module.exports = { MatchmakingManager };

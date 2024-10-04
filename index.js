@@ -3,6 +3,7 @@ const express = require("express");
 const http = require("http");
 const { WebSocketTransport } = require("@colyseus/ws-transport");
 const { MyRoom } = require("./MyRoom");
+const { MatchmakingManager } = require("./MatchmakingManager");
 
 const port = process.env.PORT || 2567;
 const app = express();
@@ -22,13 +23,24 @@ const gameServer = new colyseus.Server({
 });
 
 // Define your room
-gameServer.define("game_room", MyRoom)
-  .enableRealtimeListing();
+gameServer.define("game", MyRoom);
 
-// Set up matchmaker
-gameServer.define("game", MyRoom)
-  .enableRealtimeListing()
-  .setSimultaneousReservedSeatCount(2);
+// Initialize the Matchmaking Manager
+const matchmakingManager = new MatchmakingManager(gameServer);
+
+// Handle matchmaking requests
+gameServer.onConnection((client) => {
+  client.onMessage("find_match", (options) => {
+    console.log(`Client ${client.sessionId} requesting to find a match`);
+    matchmakingManager.addToQueue(client, options);
+  });
+
+  // Handle client disconnection
+  client.onLeave(() => {
+    console.log(`Client ${client.sessionId} disconnected`);
+    matchmakingManager.handleDisconnect(client);
+  });
+});
 
 console.log("Starting server...");
 server.listen(port, '0.0.0.0', () => {

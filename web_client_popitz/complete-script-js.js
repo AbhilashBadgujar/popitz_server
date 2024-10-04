@@ -20,18 +20,26 @@ document.addEventListener('DOMContentLoaded', (event) => {
         matchmakingStatus.textContent = "Searching for a match...";
 
         try {
-            // Use the matchmaker to find a game
-            room = await client.joinOrCreate("game");
-            console.log("Joined game room", room);
-            setupRoomHandlers();
-            gameContent.style.display = 'block';
-            document.getElementById('matchmaking-container').style.display = 'none';
+            // Send matchmaking request to the server
+            client.send("find_match", {});
+            
+            // Set up event listener for when a match is found
+            client.onMessage("match_found", async (roomId) => {
+                console.log("Match found, joining room:", roomId);
+                room = await client.joinById(roomId);
+                console.log("Joined game room", room);
+                setupRoomHandlers();
+                gameContent.style.display = 'block';
+                document.getElementById('matchmaking-container').style.display = 'none';
+            });
         } catch (e) {
-            console.error("Error joining game room", e);
+            console.error("Error in matchmaking:", e);
             matchmakingStatus.textContent = "Error finding a match. Please try again.";
             startMatchmakingBtn.disabled = false;
         }
     }
+
+    
     document.getElementById('start-game-btn').addEventListener('click', () => {
         if (selectedCardIds.length === 3) {
             room.send("selectCards", { cardIds: selectedCardIds });
@@ -66,16 +74,13 @@ document.addEventListener('DOMContentLoaded', (event) => {
             allCards = cards;
             displayCardSelection();
         });
+
         room.onMessage("start", (message) => {
             document.getElementById('card-selection').style.display = 'none';
             document.getElementById('start-game-btn').style.display = 'none';
             document.getElementById('selection-info').style.display = 'none';
             log(`Game is starting! Countdown: ${message.countdown}, World Type: ${message.worldType}`);
             document.getElementById('world-info').innerText = `World Type: ${message.worldType}`;
-        });
-
-        room.onMessage("countdown", (message) => {
-            log(`Countdown: ${message.countdown}`);
         });
 
         room.onMessage("turn", (message) => {
