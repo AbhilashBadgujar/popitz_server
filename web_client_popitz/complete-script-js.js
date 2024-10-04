@@ -12,6 +12,8 @@ document.addEventListener('DOMContentLoaded', (event) => {
     const startMatchmakingBtn = document.getElementById('start-matchmaking-btn');
     const matchmakingStatus = document.getElementById('matchmaking-status');
     const gameContent = document.getElementById('game-content');
+    const cardSelection = document.getElementById('card-selection');
+    const startGameBtn = document.getElementById('start-game-btn');
 
     startMatchmakingBtn.addEventListener('click', startMatchmaking);
 
@@ -20,25 +22,17 @@ document.addEventListener('DOMContentLoaded', (event) => {
         matchmakingStatus.textContent = "Searching for a match...";
 
         try {
-            // Send matchmaking request to the server
-            client.send("find_match", {});
-            
-            // Set up event listener for when a match is found
-            client.onMessage("match_found", async (roomId) => {
-                console.log("Match found, joining room:", roomId);
-                room = await client.joinById(roomId);
-                console.log("Joined game room", room);
-                setupRoomHandlers();
-                gameContent.style.display = 'block';
-                document.getElementById('matchmaking-container').style.display = 'none';
-            });
+            room = await client.joinOrCreate("game");
+            console.log("Joined game room", room);
+            setupRoomHandlers();
+            gameContent.style.display = 'block';
+            document.getElementById('matchmaking-container').style.display = 'none';
         } catch (e) {
-            console.error("Error in matchmaking:", e);
+            console.error("Error joining game room", e);
             matchmakingStatus.textContent = "Error finding a match. Please try again.";
             startMatchmakingBtn.disabled = false;
         }
     }
-
     
     document.getElementById('start-game-btn').addEventListener('click', () => {
         if (selectedCardIds.length === 3) {
@@ -75,9 +69,14 @@ document.addEventListener('DOMContentLoaded', (event) => {
             displayCardSelection();
         });
 
+        room.onMessage("startCardSelection", () => {
+            cardSelection.style.display = 'block';
+            startGameBtn.style.display = 'block';
+        });
+
         room.onMessage("start", (message) => {
-            document.getElementById('card-selection').style.display = 'none';
-            document.getElementById('start-game-btn').style.display = 'none';
+            cardSelection.style.display = 'none';
+            startGameBtn.style.display = 'none';
             document.getElementById('selection-info').style.display = 'none';
             log(`Game is starting! Countdown: ${message.countdown}, World Type: ${message.worldType}`);
             document.getElementById('world-info').innerText = `World Type: ${message.worldType}`;
@@ -162,38 +161,55 @@ document.addEventListener('DOMContentLoaded', (event) => {
     }
 
     function displayCardSelection() {
-        const selectionDiv = document.getElementById('card-selection');
-        selectionDiv.innerHTML = '';
+        cardSelection.innerHTML = '';
         allCards.forEach(card => {
-            const cardDiv = document.createElement('div');
-            cardDiv.className = `card type-${card.type}`;
-            cardDiv.innerHTML = `
-                <h3>${card.name}</h3>
-                <p>Type: ${card.type}</p>
-                <p>Power: ${card.power}</p>
-                <p>Defense: ${card.defense}</p>
-                <p class="emo-${card.emo}">Emo: ${card.emo}</p>
-                <p class="rarity-${card.rarity}">Rarity: ${card.rarity}</p>
-                <p>Mojo: ${card.mojo}/10</p>
-            `;
-            cardDiv.onclick = () => selectCard(card.id, cardDiv);
-            selectionDiv.appendChild(cardDiv);
+            const cardElement = createCardElement(card);
+            cardSelection.appendChild(cardElement);
         });
-        document.getElementById('start-game-btn').style.display = 'block';
-        updateSelectionInfo();
     }
 
-    function selectCard(cardId, cardDiv) {
+    function createCardElement(card) {
+        const cardElement = document.createElement('div');
+        cardElement.className = `card ${card.type}`;
+        cardElement.innerHTML = `
+            <h3>${card.name}</h3>
+            <p>Type: ${card.type}</p>
+            <p>Power: ${card.power}</p>
+            <p>Defense: ${card.defense}</p>
+            <p>Emo: ${card.emo}</p>
+            <p>Rarity: ${card.rarity}</p>
+        `;
+        cardElement.addEventListener('click', () => selectCard(card.id, cardElement));
+        return cardElement;
+    }
+
+    function selectCard(cardId, cardElement) {
         if (selectedCardIds.includes(cardId)) {
             selectedCardIds = selectedCardIds.filter(id => id !== cardId);
-            cardDiv.classList.remove('selected');
+            cardElement.classList.remove('selected');
         } else if (selectedCardIds.length < 3) {
             selectedCardIds.push(cardId);
-            cardDiv.classList.add('selected');
+            cardElement.classList.add('selected');
         }
-        updateSelectionInfo();
-        updateStartButton();
+        startGameBtn.disabled = selectedCardIds.length !== 3;
     }
+    startGameBtn.addEventListener('click', () => {
+        if (selectedCardIds.length === 3) {
+            room.send("selectCards", { cardIds: selectedCardIds });
+            startGameBtn.disabled = true;
+        }
+    });
+    document.getElementById('attack-btn').addEventListener('click', () => {
+        if (isMyTurn && selectedCharacterIndex !== -1 && selectedOpponentCharacterIndex !== -1) {
+            room.send("attack", { fromCharacterIndex: selectedCharacterIndex, toCharacterIndex: selectedOpponentCharacterIndex });
+        }
+    });
+
+    document.getElementById('defend-btn').addEventListener('click', () => {
+        if (isMyTurn && selectedCharacterIndex !== -1) {
+            room.send("defend", { characterIndex: selectedCharacterIndex });
+        }
+    });
 
     function updateSelectionInfo() {
         const infoDiv = document.getElementById('selection-info');

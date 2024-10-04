@@ -26,14 +26,7 @@ class MyRoom extends Room {
     console.log("Room created!");
     this.setState(new MyRoomState());
     this.maxClients = 2;
-    this.countdown = 3;
-    this.turnOrder = [];
     this.cardData = loadCardData();
-
-    if (this.cardData.length === 0) {
-      console.error("Failed to load card data. Room creation aborted.");
-      return;
-    }
 
     this.onMessage("selectCards", (client, message) => {
       this.handleCardSelection(client, message);
@@ -48,30 +41,32 @@ class MyRoom extends Room {
     });
   }
 
-
   onJoin(client, options) {
     console.log(`Player joining: ${client.sessionId}`);
     
-    if (!this.state.players.has(client.sessionId)) {
-      const newPlayer = new Player();
-      newPlayer.sessionId = client.sessionId;
-      this.state.players.set(client.sessionId, newPlayer);
+    const newPlayer = new Player();
+    newPlayer.sessionId = client.sessionId;
+    this.state.players.set(client.sessionId, newPlayer);
 
-      console.log(`Player joined: ${client.sessionId}`);
-      console.log(`Total players: ${this.state.players.size}`);
+    console.log(`Player joined: ${client.sessionId}`);
+    console.log(`Total players: ${this.state.players.size}`);
 
-      // Send all cards to the client for selection
-      client.send("allCards", this.cardData);
+    // Send all cards to the client for selection
+    client.send("allCards", this.cardData);
 
-      if (this.state.players.size === 2) {
-        // Wait for both players to select cards before starting the game
-      }
-    } else {
-      console.log(`Player ${client.sessionId} already exists in the room.`);
+    if (this.state.players.size === 2) {
+      this.startCardSelection();
     }
   }
 
+  startCardSelection() {
+    console.log("Starting card selection phase");
+    this.state.gamePhase = "cardSelection";
+    this.broadcast("startCardSelection");
+  }
+
   handleCardSelection(client, message) {
+    console.log(`Received card selection from ${client.sessionId}:`, message.cardIds);
     const player = this.state.players.get(client.sessionId);
     if (player && message.cardIds && message.cardIds.length === 3) {
       message.cardIds.forEach(cardId => {
@@ -90,6 +85,8 @@ class MyRoom extends Room {
         }
       });
 
+      player.ready = true;
+
       if (this.allPlayersReady()) {
         this.startGame();
       }
@@ -97,7 +94,7 @@ class MyRoom extends Room {
   }
 
   allPlayersReady() {
-    return Array.from(this.state.players.values()).every(player => player.characters.length === 3);
+    return Array.from(this.state.players.values()).every(player => player.ready);
   }
 
   startGame() {
