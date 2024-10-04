@@ -29,15 +29,13 @@ gameServer.define("game", MyRoom);
 const matchmakingManager = new MatchmakingManager(gameServer);
 
 // Handle matchmaking requests
-gameServer.onConnection((client) => {
-  client.onMessage("find_match", (options) => {
-    console.log(`Client ${client.sessionId} requesting to find a match`);
+gameServer.on('connection', (client) => {
+  client.onMessage('find_match', (options) => {
     matchmakingManager.addToQueue(client, options);
   });
 
   // Handle client disconnection
   client.onLeave(() => {
-    console.log(`Client ${client.sessionId} disconnected`);
     matchmakingManager.handleDisconnect(client);
   });
 });
