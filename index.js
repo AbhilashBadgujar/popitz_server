@@ -5,7 +5,10 @@ const { WebSocketTransport } = require("@colyseus/ws-transport");
 const { MyRoom } = require("./MyRoom");
 const { MatchmakingManager } = require("./MatchmakingManager");
 
+// Environment variables
 const port = process.env.PORT || 2567;
+const isDevelopment = process.env.NODE_ENV !== 'production';
+
 const app = express();
 
 app.get("/", (req, res) => {
@@ -45,7 +48,17 @@ gameServer.define("matchmaking", MatchmakingRoom);
 gameServer.define("game", MyRoom);
 
 console.log("Starting server...");
-server.listen(port, '0.0.0.0', () => {
-  console.log(`Game server is listening on ws://0.0.0.0:${port}`);
-});
-console.log("Server started!");
+
+if (isDevelopment) {
+  // For local development
+  server.listen(port, 'localhost', () => {
+    console.log(`Game server is listening on ws://localhost:${port}`);
+  });
+} else {
+  // For production deployment
+  server.listen(port, '0.0.0.0', () => {
+    console.log(`Game server is listening on ws://0.0.0.0:${port}`);
+  });
+}
+
+console.log(`Server started in ${isDevelopment ? 'development' : 'production'} mode!`);

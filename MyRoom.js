@@ -114,6 +114,7 @@ class MyRoom extends Room {
     console.log("Starting the game!");
     this.state.gameStarted = true;
 
+    this.countdown = 3;
     // Set a random world type
     this.state.worldType = WORLD_TYPES[Math.floor(Math.random() * WORLD_TYPES.length)];
     console.log(`World type set to: ${this.state.worldType}`);
