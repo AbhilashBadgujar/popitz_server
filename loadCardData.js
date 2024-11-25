@@ -19,7 +19,9 @@ function loadCardData() {
             emo: record.emo,
             rarity: record.rarity,
             defense: parseInt(record.defense),
-            mojo: parseInt(record.mojo)
+            mojo: parseInt(record.mojo),
+            health: parseInt(record.health || 100),
+            isDisabled: record.isDisabled === 'true'
         }));
     } catch (error) {
         console.error('Error loading card data:', error);
