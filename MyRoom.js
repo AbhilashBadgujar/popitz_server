@@ -36,6 +36,10 @@ class MyRoom extends Room {
       this.startCharacterPlacementHandler();
     });
 
+    this.onMessage("displaceCards", (client, message) => {
+      this.handleCardDisplacement(client, message);
+    });
+
     this.onMessage("attack", (client, message) => {
       this.handleAttack(client, message);
     });
@@ -43,30 +47,6 @@ class MyRoom extends Room {
     this.onMessage("defend", (client, message) => {
       this.handleDefend(client, message);
     });
-  }
-
-  onJoin(client, options) {
-    console.log(`Player joining: ${client.sessionId}`);
-    
-    const newPlayer = new Player();
-    newPlayer.sessionId = client.sessionId;
-    this.state.players.set(client.sessionId, newPlayer);
-
-    console.log(`Player joined: ${client.sessionId}`);
-    console.log(`Total players: ${this.state.players.size}`);
-
-    // Send all cards to the client for selection
-    client.send("allCards", this.cardData);
-
-    if (this.state.players.size === 2) {
-      this.startCardSelection();
-    }
-  }
-
-  startCardSelection() {
-    console.log("Starting card selection phase");
-    this.state.gamePhase = "cardSelection";
-    this.broadcast("startCardSelection");
   }
 
   handleCardSelection(client, message) {
@@ -101,7 +81,7 @@ class MyRoom extends Room {
       player.cardSelectionReady = true;
 
       if (this.allPlayersReadyForCardSelection()) {
-        this.startCharacterPlacement();
+        this.startCardDisplacement();
       }
     } else {
       console.log(`Invalid card selection from ${client.sessionId}`);
@@ -110,6 +90,43 @@ class MyRoom extends Room {
 
   allPlayersReadyForCardSelection() {
     return Array.from(this.state.players.values()).every(player => player.cardSelectionReady);
+  }
+
+  startCardDisplacement() {
+    console.log("Starting card displacement phase");
+    this.state.gamePhase = "cardDisplacement";
+    this.broadcast("startCardDisplacement");
+  }
+
+  handleCardDisplacement(client, message) {
+    const player = this.state.players.get(client.sessionId);
+
+    if (!player || player.readyForDisplacement) {
+      console.log(`Player ${client.sessionId} has already displaced cards or is not valid. Ignoring.`);
+      return;
+    }
+
+    if (message.positions && message.positions.length === 3) {
+      for (let i = 0; i < message.positions.length; i++) {
+        const character = player.characters[i];
+        if (character) {
+          character.position = message.positions[i]; // Save initial position if necessary for UI
+        }
+      }
+
+      player.readyForDisplacement = true;
+      console.log(`Player ${client.sessionId} has completed card displacement.`);
+
+      if (this.allPlayersReadyForDisplacement()) {
+        this.startCharacterPlacement();
+      }
+    } else {
+      console.log(`Invalid card displacement from ${client.sessionId}`);
+    }
+  }
+
+  allPlayersReadyForDisplacement() {
+    return Array.from(this.state.players.values()).every(player => player.readyForDisplacement);
   }
 
   startCharacterPlacement() {
