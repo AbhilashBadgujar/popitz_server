@@ -67,12 +67,12 @@ class MyRoom extends Room {
 
   handleCardSelection(client, message) {
     const player = this.state.players.get(client.sessionId);
-  
+
     if (!player || player.ready) {
       console.log(`Player ${client.sessionId} already selected cards. Ignoring duplicate selection.`);
       return;
     }
-  
+
     console.log(`Received card selection from ${client.sessionId}:`, message.cardIds);
     if (message.cardIds && message.cardIds.length === 3) {
       message.cardIds.forEach(cardId => {
@@ -91,24 +91,66 @@ class MyRoom extends Room {
           player.characters.push(character);
         }
       });
-  
-      player.ready = true;
+
       console.log(`Player ${client.sessionId} has completed their card selection.`);
-  
-      if (this.allPlayersReady()) {
-        this.startGame();
+
+      player.cardSelectionReady = true;
+
+      if (this.allPlayersReadyForCardSelection()) {
+        this.startCharacterPlacement();
       }
     } else {
       console.log(`Invalid card selection from ${client.sessionId}`);
     }
   }
+
+  allPlayersReadyForCardSelection() {
+    return Array.from(this.state.players.values()).every(player => player.cardSelectionReady);
+  }
+
+  startCharacterPlacement() {
+    console.log("Starting character placement phase");
+    this.state.gamePhase = "characterPlacement";
+    this.broadcast("startCharacterPlacement");
+  }
+
+  handleCharacterPlacement(client, message) {
+    const player = this.state.players.get(client.sessionId);
+
+    if (!player || player.readyForPlacement) {
+      console.log(`Player ${client.sessionId} has already placed characters or is not valid. Ignoring placement.`);
+      return;
+    }
+
+    if (message.positions && message.positions.length === 3) {
+      for (let i = 0; i < message.positions.length; i++) {
+        const character = player.characters[i];
+        if (character) {
+          character.position = message.positions[i];
+        }
+      }
+
+      player.readyForPlacement = true;
+      console.log(`Player ${client.sessionId} has completed character placement.`);
+
+      if (this.allPlayersReadyForPlacement()) {
+        this.startGame();
+      }
+    } else {
+      console.log(`Invalid character placement from ${client.sessionId}`);
+    }
+  }
+
+  allPlayersReadyForPlacement() {
+    return Array.from(this.state.players.values()).every(player => player.readyForPlacement);
+  }
   
 
 
-  allPlayersReady() {
+  /* allPlayersReady() {
     return Array.from(this.state.players.values()).every(player => player.ready);
   }
-
+ */
   startGame() {
     console.log("Starting the game!");
     this.state.gameStarted = true;

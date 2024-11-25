@@ -49,6 +49,7 @@ class Character extends Schema {
     this.mojo = mojo;
     this.health = 100;
     this.isDisabled = false;
+    this.position = -1; // Default position until placed
   }
 }
 
@@ -62,7 +63,8 @@ schema.defineTypes(Character, {
   type: "string",
   mojo: "number",
   health: "number",
-  isDisabled: "boolean"
+  isDisabled: "boolean",
+  position: "number"
 });
 
 class Player extends Schema {
