@@ -128,17 +128,7 @@ class MyRoomState extends Schema {
   }
 }
 
-schema.defineTypes(Character, {
-  id: "number",
-  power: "number",
-  emo: "string",
-  rarity: "string",
-  defense: "number",
-  type: "string",
-  mojo: "number",
-  health: "number",
-  isDisabled: "boolean"
-});
+
 
 schema.defineTypes(Player, {
     characters: [Character],
