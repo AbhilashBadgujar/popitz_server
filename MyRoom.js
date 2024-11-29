@@ -32,7 +32,9 @@ class MyRoom extends Room {
       this.handleCardSelection(client, message);
     });
 
-    
+    this.onMessage("cardplacementfinish", (client, message) => {
+      this.handleCharacterPlacement(client, message);
+    });
 
     this.onMessage("attack", (client, message) => {
       this.handleAttack(client, message);
