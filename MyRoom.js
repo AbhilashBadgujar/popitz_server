@@ -190,15 +190,27 @@ class MyRoom extends Room {
   startGame() {
     console.log("Starting the game!");
     this.state.gameStarted = true;
-
+  
     this.countdown = 3;
     // Set a random world type
     this.state.worldType = WORLD_TYPES[Math.floor(Math.random() * WORLD_TYPES.length)];
     console.log(`World type set to: ${this.state.worldType}`);
-
-    this.broadcast("start", { countdown: this.countdown, worldType: this.state.worldType });
-    console.log(`Broadcasting start message with countdown ${this.countdown} and world type ${this.state.worldType}`);
-
+  
+    // Create playerPositions array to include player session ID and positions of their characters
+    const playerPositions = [];
+    this.state.players.forEach((player, sessionId) => {
+      const positions = player.characters.map(character => character.position);
+      playerPositions.push([sessionId, positions]);
+    });
+  
+    // Broadcast start message, including countdown, world type, and player positions
+    this.broadcast("start", {
+      countdown: this.countdown,
+      worldType: this.state.worldType,
+      playerPositions: playerPositions
+    });
+    console.log(`Broadcasting start message with countdown ${this.countdown}, world type ${this.state.worldType}, and player positions:`, playerPositions);
+  
     const countdownInterval = setInterval(() => {
       if (this.countdown > 0) {
         this.countdown--;
@@ -211,6 +223,44 @@ class MyRoom extends Room {
       }
     }, 1000);
   }
+  
+  startGame() {
+    console.log("Starting the game!");
+    this.state.gameStarted = true;
+  
+    this.countdown = 3;
+    // Set a random world type
+    this.state.worldType = WORLD_TYPES[Math.floor(Math.random() * WORLD_TYPES.length)];
+    console.log(`World type set to: ${this.state.worldType}`);
+  
+    // Create playerPositions array to include player session ID and positions of their characters
+    const playerPositions = [];
+    this.state.players.forEach((player, sessionId) => {
+      const positions = player.characters.map(character => character.position);
+      playerPositions.push([sessionId, positions]);
+    });
+  
+    // Broadcast start message, including countdown, world type, and player positions
+    this.broadcast("start", {
+      countdown: this.countdown,
+      worldType: this.state.worldType,
+      playerPositions: playerPositions
+    });
+    console.log(`Broadcasting start message with countdown ${this.countdown}, world type ${this.state.worldType}, and player positions:`, playerPositions);
+  
+    const countdownInterval = setInterval(() => {
+      if (this.countdown > 0) {
+        this.countdown--;
+        this.state.countdown = this.countdown;
+        this.broadcast("countdown", { countdown: this.countdown });
+        console.log(`Countdown: ${this.countdown}`);
+      } else {
+        clearInterval(countdownInterval);
+        this.startFirstTurn();
+      }
+    }, 1000);
+  }
+    
 
   startFirstTurn() {
     this.turnOrder = Array.from(this.state.players.keys());
