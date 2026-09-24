@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Popitz Arena</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="app">
+    <header class="topbar">
+      <div class="brand">Popitz <span>Arena</span></div>
+      <div id="phase-label" class="phase-label"></div>
+      <div id="conn-status" class="conn-status offline" title="Connection status"></div>
+    </header>
+
+    <!-- LOBBY -->
+    <section id="screen-lobby" class="screen active">
+      <div class="lobby-card">
+        <h1>Popitz Arena</h1>
+        <p class="tagline">Pick three champions, set your formation and battle for the arena.</p>
+        <button id="btn-find" class="btn btn-primary btn-lg">Find Match</button>
+        <div id="lobby-status" class="lobby-status"></div>
+        <details class="server-config">
+          <summary>Server</summary>
+          <input id="server-url" type="text" spellcheck="false" aria-label="Server URL">
+          <small>Tip: open this page in two tabs to play against yourself.</small>
+        </details>
+        <div class="rules">
+          <div class="rule"><span class="type-dot city"></span>City beats Forest</div>
+          <div class="rule"><span class="type-dot forest"></span>Forest beats Water</div>
+          <div class="rule"><span class="type-dot water"></span>Water beats City</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CARD SELECTION -->
+    <section id="screen-select" class="screen">
+      <div class="screen-head">
+        <h2>Draft your team</h2>
+        <p id="select-hint">Choose 3 champions</p>
+      </div>
+      <div id="card-pool" class="card-grid"></div>
+      <div class="dock">
+        <div id="picked-slots" class="picked-slots"></div>
+        <button id="btn-lock" class="btn btn-primary" disabled>Lock In</button>
+      </div>
+    </section>
+
+    <!-- CARD DISPLAY -->
+    <section id="screen-reveal" class="screen">
+      <div class="screen-head">
+        <h2>Teams revealed</h2>
+        <p>Formation phase begins in <b id="reveal-timer">5</b>s</p>
+      </div>
+      <div class="reveal">
+        <div class="reveal-side">
+          <h3 class="side-title enemy">Opponent</h3>
+          <div id="reveal-opp" class="card-row"></div>
+        </div>
+        <div class="versus">VS</div>
+        <div class="reveal-side">
+          <h3 class="side-title ally">You</h3>
+          <div id="reveal-me" class="card-row"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PLACEMENT -->
+    <section id="screen-place" class="screen">
+      <div class="screen-head">
+        <h2>Set your formation</h2>
+        <p id="place-hint">Select a champion, then click a spot on the field</p>
+      </div>
+      <div id="place-field" class="field-row placement"></div>
+      <div id="place-hand" class="card-row hand"></div>
+      <div class="dock">
+        <button id="btn-auto-place" class="btn btn-ghost">Auto place</button>
+        <button id="btn-confirm-place" class="btn btn-primary" disabled>Ready</button>
+      </div>
+    </section>
+
+    <!-- BATTLE -->
+    <section id="screen-battle" class="screen">
+      <div class="battle-layout">
+        <div class="arena" id="arena">
+          <div class="arena-info">
+            <div id="world-badge" class="world-badge"></div>
+            <div id="turn-banner" class="turn-banner"></div>
+            <div class="turn-timer"><div id="turn-timer-bar"></div></div>
+          </div>
+          <div class="side enemy-side">
+            <div class="side-label">Opponent</div>
+            <div id="field-opp" class="field-row"></div>
+          </div>
+          <div class="midline"></div>
+          <div class="side ally-side">
+            <div id="field-me" class="field-row"></div>
+            <div class="side-label">You</div>
+          </div>
+          <div class="action-bar">
+            <div id="action-hint" class="action-hint"></div>
+            <button id="btn-defend" class="btn btn-shield" disabled>🛡 Defend</button>
+          </div>
+        </div>
+        <aside class="log-panel">
+          <h3>Battle log</h3>
+          <div id="log" class="log"></div>
+        </aside>
+      </div>
+    </section>
+
+    <!-- OVERLAYS -->
+    <div id="overlay-countdown" class="overlay">
+      <div class="overlay-box">
+        <div id="countdown-world" class="countdown-world"></div>
+        <div id="countdown-num" class="countdown-num">3</div>
+        <div class="countdown-sub">Battle begins</div>
+      </div>
+    </div>
+
+    <div id="overlay-end" class="overlay">
+      <div class="overlay-box end-box">
+        <div id="end-title" class="end-title"></div>
+        <div id="end-sub" class="end-sub"></div>
+        <button id="btn-again" class="btn btn-primary btn-lg">Play again</button>
+      </div>
+    </div>
+
+    <div id="waiting" class="waiting-toast"></div>
+  </div>
+
+  <script src="vendor/colyseus.js"></script>
+  <script>
+    window.Colyseus || document.write('<script src="https://cdn.jsdelivr.net/npm/colyseus.js@0.15.17/dist/colyseus.js"><\/script>');
+  </script>
+  <script src="game.js"></script>
+</body>
+</html>

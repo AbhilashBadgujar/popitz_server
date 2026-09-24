@@ -65,6 +65,8 @@ class MyRoom extends Room {
 
   startCardSelection() {
     console.log("Starting card selection phase");
+    // Keep late joiners out once a match is under way, even if a player drops.
+    this.lock();
     this.state.gamePhase = "cardSelection";
     this.broadcast("startCardSelection");
   }
@@ -451,7 +453,7 @@ class MyRoom extends Room {
     console.log(`Player leaving: ${client.sessionId}`);
     if (this.state.players.has(client.sessionId)) {
       this.state.players.delete(client.sessionId);
-      this.turnOrder = this.turnOrder.filter(id => id !== client.sessionId);
+      this.turnOrder = (this.turnOrder || []).filter(id => id !== client.sessionId);
       console.log(`Player left: ${client.sessionId}. Total players: ${this.state.players.size}`);
   
       if (this.state.gameStarted && this.state.players.size < 2) {

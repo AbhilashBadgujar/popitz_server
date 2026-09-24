@@ -1,6 +1,7 @@
 const colyseus = require("colyseus");
 const express = require("express");
 const http = require("http");
+const path = require("path");
 const { WebSocketTransport } = require("@colyseus/ws-transport");
 const { MyRoom } = require("./MyRoom");
 const { MatchmakingManager } = require("./MatchmakingManager");
@@ -11,7 +12,11 @@ const isDevelopment = process.env.NODE_ENV !== 'production';
 
 const app = express();
 
-app.get("/", (req, res) => {
+// Web frontend
+app.use(express.static(path.join(__dirname, "public")));
+app.use("/vendor", express.static(path.join(__dirname, "node_modules", "colyseus.js", "dist")));
+
+app.get("/status", (req, res) => {
   res.send("Colyseus server is running.");
 });
 
