@@ -2,169 +2,123 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Popitz</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&display=swap">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&display=swap">
     <link rel="stylesheet" href="https://storage.googleapis.com/popitz/web_client_popitz/styles-css.css">
 </head>
 <body>
-    <div class="app">
-        <header class="topbar">
-            <a class="brand" href="#" id="brand-link">
-                <span class="brand-mark">P</span>
-                <span class="brand-name">POPITZ</span>
-            </a>
-            <div class="topbar-status" id="topbar-status"></div>
-        </header>
+    <div class="sky" aria-hidden="true"></div>
+    <div class="scenery" id="scenery" aria-hidden="true"></div>
 
-        <!-- Lobby -->
-        <section class="screen" id="screen-lobby">
-            <div class="hero">
-                <div class="hero-copy">
-                    <div class="eyebrow">Season 1 · 12 cards</div>
-                    <h1 class="hero-title">Pick three.<br><span class="accent">Pop 'em all.</span></h1>
-                    <p class="hero-text">A fast 1v1 card battler. Draft three heroes from City, Forest and Water, read the world you land in, and pray for Mojo.</p>
-                    <div class="hero-actions">
-                        <button type="button" class="btn btn-primary btn-xl" id="find-match-btn">Find match</button>
-                        <div class="searching" id="searching" role="status" hidden>
-                            <span class="dots"><span></span><span></span><span></span></span>
-                            <span id="searching-text">Searching for an opponent…</span>
-                            <button type="button" class="btn btn-ghost" id="cancel-match-btn">Cancel</button>
-                        </div>
-                    </div>
-                    <p class="error-text" id="lobby-error" role="alert"></p>
-                </div>
-                <div class="hero-fan" id="hero-fan" aria-label="Featured legendary cards"></div>
+    <!-- Title screen -->
+    <section class="screen screen-title" id="screen-lobby">
+        <button type="button" class="round-btn help-btn" id="help-btn" aria-label="How to play">?</button>
+        <h1 class="logo" aria-label="Popitz">
+            <span>P</span><span>O</span><span>P</span><span>I</span><span>T</span><span>Z</span>
+        </h1>
+        <div class="mascots" id="mascots"></div>
+        <div class="play-zone">
+            <button type="button" class="play-btn" id="find-match-btn">PLAY</button>
+            <div class="searching" id="searching" role="status" hidden>
+                <div class="search-card" aria-hidden="true"></div>
+                <span id="searching-text">Finding opponent</span>
+                <button type="button" class="round-btn round-btn-sm" id="cancel-match-btn" aria-label="Cancel">
+                    <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>
+                </button>
             </div>
+            <p class="error-text" id="lobby-error" role="alert"></p>
+        </div>
+    </section>
 
-            <h2 class="section-title">How a battle works</h2>
-            <div class="rules">
-                <div class="rule">
-                    <div class="rule-num">1</div>
-                    <h3>Draft three</h3>
-                    <p>Pick 3 of the 12 cards. Every hero starts at 100 health.</p>
-                </div>
-                <div class="rule">
-                    <div class="element-chain">
-                        <span class="chip chip-city">City</span><span class="arrow">→</span>
-                        <span class="chip chip-forest">Forest</span><span class="arrow">→</span>
-                        <span class="chip chip-water">Water</span><span class="arrow">→</span>
-                        <span class="chip chip-city">City</span>
-                    </div>
-                    <h3>Elements</h3>
-                    <p>Hit the element you beat for ×2 damage. Hit the one that beats you for ×0.5.</p>
-                </div>
-                <div class="rule">
-                    <div class="rule-icon rule-icon-world" aria-hidden="true">
-                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3 4 6 4 9s-1 6-4 9c-3-3-4-6-4-9s1-6 4-9z"/></svg>
-                    </div>
-                    <h3>The world</h3>
-                    <p>Each match rolls a world. Heroes from that element hit ×1.2 harder.</p>
-                </div>
-                <div class="rule">
-                    <div class="rule-icon rule-icon-mojo" aria-hidden="true">9</div>
-                    <h3>Mojo &amp; Emo</h3>
-                    <p>Mojo 9 means a 90% shot at double damage. Emo adds its own bonus — Anger hits ×1.3.</p>
-                </div>
-            </div>
-        </section>
+    <!-- Draft -->
+    <section class="screen screen-draft" id="screen-draft" hidden>
+        <div class="draft-top">
+            <h1 class="banner-title">CHOOSE 3</h1>
+            <div class="pips" id="draft-pips"></div>
+        </div>
+        <div class="draft-grid" id="card-grid"></div>
+        <div class="draft-tray">
+            <div class="tray-slots" id="team-slots"></div>
+            <button type="button" class="fight-btn" id="lock-in-btn" disabled>FIGHT!</button>
+        </div>
+    </section>
 
-        <!-- Draft -->
-        <section class="screen" id="screen-draft" hidden>
-            <div class="draft-head">
-                <div>
-                    <div class="eyebrow-plain">Step 1 of 2 · Draft</div>
-                    <h1 class="page-title">Pick your three</h1>
-                </div>
-                <div class="tabs" role="tablist" aria-label="Filter by element" id="filter-tabs"></div>
-            </div>
-            <div class="draft-layout">
-                <div class="card-grid" id="card-grid"></div>
-                <aside class="panel team-panel" aria-labelledby="team-title">
-                    <div class="team-head">
-                        <h2 id="team-title">Your team</h2>
-                        <div class="team-count"><span id="team-count">0</span><span class="muted">/3</span></div>
-                    </div>
-                    <div class="slots" id="team-slots"></div>
-                    <div class="team-stats">
-                        <div class="stat-box"><div class="stat-label">TEAM ATK</div><div class="stat-value atk" id="team-atk">0</div></div>
-                        <div class="stat-box"><div class="stat-label">TEAM DEF</div><div class="stat-value def" id="team-def">0</div></div>
-                    </div>
-                    <p class="advice" id="team-advice"></p>
-                    <button type="button" class="btn btn-primary btn-xl btn-block" id="lock-in-btn" disabled>Pick 3 more</button>
-                </aside>
-            </div>
-        </section>
+    <!-- VS splash -->
+    <section class="screen screen-vs" id="screen-reveal" hidden>
+        <div class="vs-half vs-left"><div class="vs-cards" id="reveal-mine"></div><div class="vs-tag">YOU</div></div>
+        <div class="vs-mark">VS</div>
+        <div class="vs-half vs-right"><div class="vs-cards" id="reveal-theirs"></div><div class="vs-tag">FOE</div></div>
+    </section>
 
-        <!-- Reveal -->
-        <section class="screen" id="screen-reveal" hidden>
-            <div class="reveal-head">
-                <div class="eyebrow-plain">Step 2 of 2 · Teams locked</div>
-                <h1 class="page-title">Here's the matchup</h1>
+    <!-- Arena -->
+    <section class="screen screen-arena" id="screen-battle" hidden>
+        <div class="hud hud-top">
+            <div class="plate plate-foe">
+                <span class="avatar avatar-foe" aria-hidden="true"></span>
+                <span class="plate-name">FOE</span>
+                <span class="pips pips-sm" id="foe-pips"></span>
             </div>
-            <div class="reveal-side">
-                <h2 class="reveal-label">Your team</h2>
-                <div class="reveal-row" id="reveal-mine"></div>
-            </div>
-            <div class="reveal-vs">VS</div>
-            <div class="reveal-side">
-                <h2 class="reveal-label">Their team</h2>
-                <div class="reveal-row" id="reveal-theirs"></div>
-            </div>
-            <p class="reveal-note" id="reveal-note" role="status">Get ready — the battle starts in a moment.</p>
-        </section>
+            <div class="world-medal" id="world-medal"></div>
+        </div>
 
-        <!-- Battle -->
-        <section class="screen" id="screen-battle" hidden>
-            <div class="battle-bar">
-                <div class="world-chip" id="world-chip"></div>
-                <div class="turn-pill" id="turn-pill">Waiting…</div>
+        <div class="board">
+            <div class="row row-foe" id="their-row"></div>
+            <div class="midline">
+                <div class="hint" id="hint" role="status"></div>
             </div>
-            <div class="battle-layout">
-                <div class="battle-main">
-                    <section aria-label="Opponent's heroes">
-                        <div class="side-label"><span class="avatar avatar-p2">P2</span><span>Opponent</span><span class="muted" id="their-alive"></span></div>
-                        <div class="hero-row" id="their-row"></div>
-                    </section>
-                    <div class="vs-strip">
-                        <span class="vs">VS</span>
-                        <span class="vs-text" id="vs-text" role="status"></span>
-                    </div>
-                    <section aria-label="Your heroes">
-                        <div class="hero-row" id="my-row"></div>
-                        <div class="side-label"><span class="avatar avatar-p1">P1</span><span>You</span><span class="muted" id="my-alive"></span></div>
-                    </section>
-                    <div class="panel action-bar">
-                        <div class="action-copy">
-                            <div class="stat-label">YOUR MOVE</div>
-                            <div class="action-preview" id="action-preview"></div>
-                        </div>
-                        <button type="button" class="btn btn-outline btn-lg" id="defend-btn" disabled>Defend</button>
-                        <button type="button" class="btn btn-primary btn-lg" id="attack-btn" disabled>Attack!</button>
-                    </div>
-                </div>
-                <aside class="panel log-panel" aria-labelledby="log-title">
-                    <h2 id="log-title">Battle log</h2>
-                    <ol class="log" id="log"></ol>
-                </aside>
-            </div>
-        </section>
-    </div>
+            <div class="row row-you" id="my-row"></div>
+        </div>
 
-    <!-- Countdown overlay -->
-    <div class="overlay" id="countdown-overlay" hidden>
+        <div class="hud hud-bottom">
+            <div class="plate plate-you">
+                <span class="avatar avatar-you" aria-hidden="true"></span>
+                <span class="plate-name">YOU</span>
+                <span class="pips pips-sm" id="you-pips"></span>
+            </div>
+            <button type="button" class="defend-btn" id="defend-btn" disabled aria-label="Defend selected hero">
+                <svg aria-hidden="true" viewBox="0 0 24 24" fill="currentColor"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                <span>DEFEND</span>
+            </button>
+        </div>
+
+        <div class="turn-banner" id="turn-banner" aria-live="polite"></div>
+        <div class="fx" id="fx" aria-hidden="true"></div>
+    </section>
+
+    <!-- Countdown -->
+    <div class="overlay overlay-clear" id="countdown-overlay" hidden>
         <div class="countdown" id="countdown-num">3</div>
-        <div class="countdown-world" id="countdown-world"></div>
     </div>
 
-    <!-- Result overlay -->
+    <!-- Waiting -->
+    <div class="overlay" id="wait-overlay" hidden>
+        <div class="search-card search-card-lg" aria-hidden="true"></div>
+        <div class="wait-text" role="status">Waiting for opponent</div>
+    </div>
+
+    <!-- Result -->
     <div class="overlay" id="result-overlay" role="dialog" aria-labelledby="result-title" hidden>
-        <div class="result-card" id="result-card">
-            <h2 id="result-title">Victory!</h2>
-            <p id="result-text"></p>
-            <button type="button" class="btn btn-primary btn-lg" id="play-again-btn">Play again</button>
+        <div class="rays" aria-hidden="true"></div>
+        <div class="confetti" id="confetti" aria-hidden="true"></div>
+        <div class="result-box" id="result-card">
+            <h2 class="result-ribbon" id="result-title">VICTORY</h2>
+            <div class="result-stars" id="result-stars" aria-hidden="true"></div>
+            <p class="result-text" id="result-text"></p>
+            <button type="button" class="play-btn play-btn-md" id="play-again-btn">PLAY AGAIN</button>
+        </div>
+    </div>
+
+    <!-- How to play -->
+    <div class="overlay" id="help-overlay" role="dialog" aria-labelledby="help-title" hidden>
+        <div class="help-box">
+            <button type="button" class="round-btn round-btn-sm help-close" id="help-close" aria-label="Close">
+                <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>
+            </button>
+            <h2 class="banner-title banner-title-sm" id="help-title">HOW TO PLAY</h2>
+            <div class="help-grid" id="help-grid"></div>
         </div>
     </div>
 
